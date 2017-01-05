@@ -1,0 +1,212 @@
+{% extends "layout_normal.html" %}
+
+{% block extra_css %}
+<style type="text/css">
+   .labels {
+     color: red;
+     background-color: white;
+     font-family: "Lucida Grande", "Arial", sans-serif;
+     font-size: 10px;
+     font-weight: bold;
+     text-align: center;
+     width: 40px;
+     border: 2px solid black;
+     white-space: nowrap;
+   }
+
+.infoWindow {
+        border:0px none; opacity:1; background:transparent;
+        width:50px; color:red; text-align:center; opacity:1;
+            }
+            
+    #map_canvas { float:left; width:100%;height:500px; }
+            
+</style>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-6">
+    
+    Location: <select id="location" onchange="panToLocation()">
+        <option value="">Select...</option>
+        <option selected data-latlng="27.914643031621768, -82.74971008300781" data-zoom="13">Clearwater, FL</option>
+        <option data-latlng="27.9539142,-82.4415314" data-zoom="12">Ybor City, FL</option>
+        <option data-latlng="26.1411125,-80.149973" data-zoom="12">Ft Lauderdale, FL</option>
+        <option data-latlng="25.782324,-80.2310801" data-zoom="12">Miami, FL</option>
+        <option data-latlng="44.076486948484536, -71.22058868408203" data-zoom="12">Bartlett, NH</option>
+        <option data-latlng="40.7056258,-73.97968" data-zoom="12">NYC</option>
+        <option data-latlng="40.7636971,-73.9975487" data-zoom="12">Pacho NYC</option>
+        <option data-latlng="39.1984815,-106.8367246" data-zoom="12">Aspen, CO</option>
+        <option data-latlng="50.104148,-123.001515" data-zoom="12">Whistler, BC</option>
+        <option data-latlng="30.0219504,-89.8830829" data-zoom="12">New Orleans, LA</option>
+    </select>
+
+    <input type=text id="queryInput" value="" />
+    <input type=button value="Search" onclick="doSearch()" />
+    
+    <br><br>
+    
+    <div id="map_canvas"></div>
+
+    </div>
+    <div class="col-lg-6">
+        
+        <div id="name"></div>
+        <div id="results">
+        RESULTS
+        <table></table>
+        
+    </div>
+</div>
+
+</div> <!-- /row -->
+
+<span id="div"></span>
+<input type=button value="Save Markers" onclick="savemarkers()" /><br>
+<span id="info"></span>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true&libraries=places"></script>
+
+<script type=text/javascript src="http://www.google.com/uds/api?file=uds.js&amp;v=1.0&amp;key=ABQIAAAAjU0EJWnWPMv7oQ-jjS7dYxQ82LsCgTSsdpNEnBsExtoeJv4cdBSUkiLH6ntmAr_5O4EfjDwOa0oZBQ"></script>
+
+<script type="text/javascript">
+var map;
+var marker;
+var data = {'places':{}, 'radar':[]};
+var key = "AIzaSyDwpRW_E84Acc2rHc_k3mzEuFs81zEtP7w";
+
+/*
+row = {"name":"", "email":"", "website":"", "location":"", "phone":"", "status":"Entered", "tags":"NYC Timesquare"}
+*/
+
+
+function savemarkers() {
+
+        i=0;
+        for (key in data['radar']) {
+                row = data['radar'][key];
+
+                setTimeout("getDetails('" + row.ref + "')", i*500);
+                i++;
+        }
+
+        setTimeout("save_data("+i+")", (i+5)*500);
+}
+
+
+function getDetails(id) {
+
+         req = {placeId: id};
+         var service = new google.maps.places.PlacesService(map);
+
+         service.getDetails(req, function(place, stat) {
+                if (stat != google.maps.places.PlacesServiceStatus.OK) {
+                        console.log(stat);
+                        return false;
+                 }
+                data['places'][id] = place;
+          });
+
+}
+
+function save_data(cnt) {
+        //$.post('save_gmap.cgi', {result:JSON.stringify(data['places'])});
+
+        tbl = $('#results table');
+        for (i in data['places']) {
+                row = data['places'][i];
+                console.log(row);
+
+                el = "<tr>"
+                el += "<td>" + row['name'] + "</td>";
+                el += "<td>" + row['website'] + "</td>";
+                el += "<td>" + row['formatted_address'] + "</td>";
+                el += "<td>" + row['formatted_phone_number'] + "</td>";
+                el += "</tr>";
+
+                $(el).appendTo(tbl);
+        }
+
+        alert("Saved " + cnt + " places");
+}
+
+function doSearch() {
+        var query = $('#queryInput').val();
+
+        // 12 zoom level
+
+        var req = { bounds: map.getBounds(),
+                    keyword: query
+                  };
+        
+        var service = new google.maps.places.PlacesService(map);
+
+       service.radarSearch(req, function(results, status) {
+                console.log(results);
+
+                if (status != google.maps.places.PlacesServiceStatus.OK) {
+                    alert(status);
+                    return;
+                }
+
+                for (var i = 0, result; result = results[i]; i++) {
+
+                        lat = result.geometry.location.lat;
+                        lng = result.geometry.location.lng;
+
+                        key = lat + " " + lng;
+                        if (data['radar'][key] != undefined) continue;
+
+                        result.marker = new google.maps.Marker({
+                              map: map,
+                              position: result.geometry.location
+                        });
+
+                        data['radar'][result.id] = {"ref":result.place_id, "lat":lat, "lng":lng};
+                 }
+                
+        });
+
+}
+
+// top 20 metro areas: XXX
+
+function panToLocation() {
+
+    var sel = $('#location option:selected');
+    
+    if (sel.length == 1) {
+        var lat = sel.data('latlng').split(',')[0];
+        var lng = sel.data('latlng').split(',')[1];
+        
+        map.setCenter({lat: parseFloat(lat), lng: parseFloat(lng)});
+    }
+    
+}
+
+function initialize() {
+    
+        var myOptions = {
+            mapTypeControl:false,overviewMapControl:false,panControl:false,rotateControl:false,scaleControl:false,streetViewControl:false,zoomControl:true,
+            zoom: 12,
+            center: new google.maps.LatLng(27.914643031621768, -82.74971008300781),
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        }
+
+        map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+        marker = new google.maps.Marker({map:map});
+}
+
+$(document).ready(function() { initialize(); });
+
+</script>
+
+{% endblock %}

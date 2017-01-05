@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html ng-app="sellerlink" ng-cloak>
+
+        <head>
+        <title>{% block title %}SellerLink{% endblock %}</title> 
+        {% block head %}
+            {% include "header.html" %}
+        {% endblock %}
+        
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.css">        
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<style>
+.small-icon, .toolbar-menu {
+  width: 36px;
+  min-width: 36px;
+  padding-left: 0; padding-right: 0;
+  margin: 0;
+}  
+
+#xs-searchBox md-autocomplete-wrap {
+  box-shadow: none;
+}
+#xsSearchDiv {
+  border-bottom: 1px solid black;
+}
+
+.toolbar-search {
+  width: 36px;
+  min-width: 36px;
+} 
+
+.toolbar-logo img {
+  display: inline-block;
+  margin: auto;
+  padding-left: 10px;
+  padding-right: 10px;
+  max-width: 283px;
+  min-width: 230px;
+}
+
+
+</style>        
+        {% block extra_css %}{% endblock %}        
+        </head>
+
+    <body>
+
+  <div layout="column" layout-fill>
+    
+    {% block header %}
+    <md-sidenav
+        class="md-sidenav-left"
+        md-component-id="left"
+        md-whiteframe="4">
+  
+        <md-toolbar><h2>SellerLink</h2></md-toolbar>
+        
+        Landmarks
+        
+        Cuisines/Menus
+        
+        Products
+        
+        Services
+        
+        Cars
+        
+        Vacation Rentals
+        
+        Bus Stops
+        
+        Bike Rentals
+        
+        Bike Repair Stations
+        
+        Bike Racks
+        
+        Parking Lots
+        
+        Electric Car Charging
+        
+        Athletics
+        
+        Dining
+        
+        Mailing Services
+        
+        Copiers
+        
+        Smart Kiosks
+        
+    </md-sidenav>
+
+    <div ng-controller="toolbarCtrl">
+      
+      <div id="xsSearchDiv" layout-align="center center" layout="row" ng-hide="hideSearchBox">
+
+        <div>
+         <md-button ng-click="hideSearchBox = true" class="small-icon"><md-icon md-font-icon="material-icons">arrow_back</md-icon></md-button>
+        </div>
+    
+         {% raw %}
+         <div flex>
+         <md-autocomplete id="xs-searchBox" style="color:black"
+          md-search-text="searchText"
+          md-items="item in querySearch(searchText)"
+          md-min-length="0"
+          placeholder="Search for stuff">
+        <md-item-template>
+          <span md-highlight-text="ctrl.searchText" md-highlight-flags="^i">{{item.display}}</span>
+        </md-item-template>
+        <md-not-found>
+          No states matching "{{ctrl.searchText}}" were found.
+          <a ng-click="ctrl.newState(ctrl.searchText)">Create a new one!</a>
+        </md-not-found>
+         </md-autocomplete>
+         </div>
+         {% endraw %}
+         
+      </div>  
+    
+      <md-toolbar layout-align="center" ng-show="hideSearchBox">
+        
+        <div class="md-toolbar-tools" layout="row">
+          
+          <div layout="row" flex="50" flex-xs="100">
+            <md-button class="toolbar-menu" ng-click="toggleSidenav('left')">
+              <md-icon md-font-icon="material-icons">menu</md-icon>
+            </md-button>
+            <div class="toolbar-logo" flex-xs="90" layout-align-xs="center center" layout-align="start center" layout="row">
+              <a href="/"><img  width=100% alt="SellerLink" src="/static/img/sellerlink-logo-trans.png"/></a>
+            </div>
+          </div>
+        
+        <div layout="row" flex="50">
+        {% raw %}
+        <md-autocomplete hide-xs flex="75%" style="color:black"
+          md-search-text="searchText"
+          md-items="item in querySearch(searchText)"
+          md-min-length="0"
+          placeholder="Search for stuff">
+        <md-item-template>
+          <span md-highlight-text="ctrl.searchText" md-highlight-flags="^i">{{item.display}}</span>
+        </md-item-template>
+        <md-not-found>
+          No states matching "{{ctrl.searchText}}" were found.
+          <a ng-click="ctrl.newState(ctrl.searchText)">Create a new one!</a>
+        </md-not-found>
+        </md-autocomplete>
+        {% endraw %}
+        
+        <div flex="5"></div>
+        <span flex hide-gt-xs></span>
+        <md-button ng-click="hideSearchBox = false" hide-gt-xs class="toolbar-search"><md-icon md-font-icon="material-icons">search</md-icon></md-button>        
+        
+        <button hide-xs class="btn btn-success" >Add Entry</button>
+        </div>
+        
+        </div>
+      </md-toolbar>
+    </div>
+    {% endblock %}
+
+    
+    <md-content flex>
+
+        {% block content %}
+
+        {% endblock %}
+
+    {% block footer %}
+        {% include "footer.html" %}
+    {% endblock %}
+
+    </md-content>
+
+  </div>
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-aria.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.3.2/ui-bootstrap.min.js"></script>
+
+<script>
+var app = angular.module('sellerlink', ['ngMaterial', 'ui.bootstrap']);
+
+toolbarCtrl = app.controller("toolbarCtrl", function($scope, $http, $mdSidenav) {
+
+  $scope.hideSearchBox = true;
+  
+  $scope.toggleSidenav = function(id) {
+    $mdSidenav(id).toggle();
+  }
+  
+  $scope.querySearch = function(query) {
+    data = [];
+    data.push({ value: '1', display: 'test'});
+    return data;  
+  }
+  
+});
+
+</script>
+
+    {% block extra_js %}{% endblock %}
+    
+    </body>
+</html>

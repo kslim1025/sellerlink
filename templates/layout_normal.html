@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+        <head>
+        <title>{% block title %}SellerLink{% endblock %}</title> 
+        {% block head %}
+            {% include "header.html" %}
+        {% endblock %}
+        {% block extra_css %}{% endblock %}        
+        </head>
+
+    <body>
+
+    {% block header %}
+    <nav class="navbar navbar-fixed-top">
+        
+      <div class="container">
+
+        <div class="row">
+            
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        
+        <div class="col-lg-4">
+        <a class="navbar-brand" style="padding-top:10px" href="/"><img alt="SellerLink" src="/static/img/sellerlink-logo-trans.png"/></a>
+        </div>
+
+        <div class="col-lg-8" style="padding-top:10px">
+        <div class="col-lg-8">
+        <form role="form">
+    	     <div class="input-group form-group">
+             <input type="text" id="auto-top" name="search" data-provide="typeahead" autocomplete="off" placeholder="Search for food and restaurants..." name="search" class="form-control autocomplete">
+    	     <span class="btn input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+    	     </div>
+        </form>
+        </div>
+        <div class="col-lg-3 col-lg-offset-1">
+    	    <button class="btn btn-success" onclick="location.href='#'">Add Entry</button>
+      	</div>
+        </div>
+
+        </div>
+
+        </div>
+    </div>
+    </nav>
+    {% endblock %}
+
+    <div class="content container">
+
+        {% block content %}
+
+        {% endblock %}
+
+    </div>
+
+    <!-- scripts -->
+    
+    {% block footer %}
+        {% include "footer.html" %}
+    {% endblock %}
+
+    {% block extra_js %}{% endblock %}
+    
+    </body>
+</html>
