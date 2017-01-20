@@ -4,8 +4,9 @@ from flask import Flask, request as req
 from flask import request, render_template
 from flask_sqlalchemy import SQLAlchemy
 
-from controllers import food, restaurant, service
-from controllers import api
+#from controllers import food, restaurant, service
+from controllers import autodealer
+#from controllers import api
 
 # https://sqlalchemy-continuum.readthedocs.io/en/latest/
 
@@ -13,8 +14,8 @@ from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 
 from database import db
-from models.restaurant import Restaurant
-from models.service import Service
+#from models.restaurant import Restaurant
+#from models.service import Service
 
 
 def index_view():
@@ -32,21 +33,23 @@ def create_app(config_filename):
     #app.register_blueprint(pages.blueprint)
     #app.register_blueprint(admin.blueprint, url_prefix='/admin')
     
-    app.register_blueprint(api.blueprint, url_prefix='/api')
+    #app.register_blueprint(api.blueprint, url_prefix='/api')
     
     # signpost 
     
-    app.register_blueprint(food.blueprint, url_prefix='/food')
-    app.register_blueprint(restaurant.blueprint, url_prefix='/restaurant')
-    app.register_blueprint(service.blueprint, url_prefix="/service")
+    #app.register_blueprint(food.blueprint, url_prefix='/food')
+    #app.register_blueprint(restaurant.blueprint, url_prefix='/restaurant')
+    #app.register_blueprint(service.blueprint, url_prefix="/service")
+    
+    app.register_blueprint(autodealer.blueprint, url_prefix='/localbusiness/autodealer')
     
     # clubs, events :)
     # hotels, places ...
     # products, cars...
     # services, web design
 
-    admin = Admin(app)
-    admin.add_view(ModelView(Restaurant, db.session))
+    #admin = Admin(app)
+    #admin.add_view(ModelView(Restaurant, db.session))
     
     app.logger.setLevel(logging.NOTSET)
 

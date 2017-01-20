@@ -1,6 +1,7 @@
 
 from database import db
 from sqlalchemy.schema import ForeignKey
+from sqlalchemy.ext.declarative import declared_attr
 
 from models.thing import Thing
 
@@ -10,14 +11,21 @@ class OrgAreas(db.Model):
     place_id = db.Column('place_id', db.String(1024), ForeignKey('place.guid'))
    
 
-class Organization(db.Model, Thing):
-    legalName = db.Column('legalName', db.String(1024))
+class Organization(Thing):
+    
+    legalName = db.Column('legalName', db.String(1024)) 
+    """ an orgs legal name"""
     foundingDate = db.Column('foundingDate', db.DateTime)
     telephone = db.Column('telephone', db.String(1024))
     duns = db.Column('duns', db.String(1024))
 
-    founder_id = db.Column('founder_id', db.String(1024), ForeignKey('person.guid'))
+    #founder_id = db.Column('founder_id', db.String(1024), ForeignKey('person.guid'))
+    #founder = db.relationship('person')
+    #areaServed = db.relationship('Place', secondary='OrgAreas')
 
-    founder = db.relationship('person')
-    areaServed = db.relationship('Place', secondary='OrgAreas')
+class OrgTable(Organization, db.Model):
 
+    @declared_attr
+    def __tablename__(cls):
+        return "organization"
+    

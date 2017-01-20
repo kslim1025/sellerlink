@@ -1,4 +1,4 @@
-{% extends "layout_normal.html" %}
+{% extends "layout_angular.html" %}
 
 {% block extra_css %}
 <style type="text/css">
@@ -56,10 +56,37 @@
     <div class="col-lg-6">
         
         <div id="name"></div>
-        <div id="results">
+        <div id="results" ng-controller="searchResultsCtrl">
         RESULTS
-        <table></table>
-        
+        <table width=100%>
+        <thead>
+        <colgroup>
+            <col width=50% />
+            <col width=15% />
+            <col width=20% />
+            <col width=15% />
+        </colgroup>
+        <tr>
+            <th align=center>Name</th>
+            <th align=center>URL</th>
+            <th align=center>Address</th>
+            <th align=center>Phone</th>
+        </tr>
+        </thead>    
+        <tbody>
+            {% raw %}
+            <tr ng-repeat="(id, row) in data">
+            <td>delete {{row.name}}</td>
+            <td>{{row.website}}</td>
+            <td>{{row.formatted_address}}</td>
+            <td>{{row.formatted_phone_number}}</td>
+            </tr>
+            {% endraw %}
+        </tbody>
+        </table>
+
+<a href="#" onclick="javascript:test()">test</a>
+
     </div>
 </div>
 
@@ -104,6 +131,11 @@ function savemarkers() {
 
 function getDetails(id) {
 
+        if (id in data['places']) {
+        
+            return;    
+        }
+        
          req = {placeId: id};
          var service = new google.maps.places.PlacesService(map);
 
@@ -113,8 +145,19 @@ function getDetails(id) {
                         return false;
                  }
                 data['places'][id] = place;
+                
+                addRow( place );
           });
 
+}
+
+function addRow( row ) {
+
+    scope = angular.element("#results").scope();
+    scope.$apply(function() {
+        scope.data.push( row ); 
+    });
+    
 }
 
 function save_data(cnt) {
@@ -125,14 +168,7 @@ function save_data(cnt) {
                 row = data['places'][i];
                 console.log(row);
 
-                el = "<tr>"
-                el += "<td>" + row['name'] + "</td>";
-                el += "<td>" + row['website'] + "</td>";
-                el += "<td>" + row['formatted_address'] + "</td>";
-                el += "<td>" + row['formatted_phone_number'] + "</td>";
-                el += "</tr>";
-
-                $(el).appendTo(tbl);
+                addRow( row );
         }
 
         alert("Saved " + cnt + " places");
@@ -170,6 +206,14 @@ function doSearch() {
                               position: result.geometry.location
                         });
 
+                        callback = function(marker, row) {
+                                return function() {
+                                    getDetails( row.place_id );
+                                }
+                        }( result.marker, result );
+                                
+                        result.marker.addListener('click', callback);
+
                         data['radar'][result.id] = {"ref":result.place_id, "lat":lat, "lng":lng};
                  }
                 
@@ -205,7 +249,25 @@ function initialize() {
         marker = new google.maps.Marker({map:map});
 }
 
-$(document).ready(function() { initialize(); });
+searchResultsCtrl = app.controller("searchResultsCtrl", function($scope) {
+
+    $scope.data = [];
+    
+});
+
+function test() {
+    scope = angular.element("#results").scope();
+    scope.$apply(function() {
+        scope.data.push( {'name': "test"} ); 
+    });
+}
+
+$(document).ready(function() { 
+    
+    initialize(); 
+    
+    
+});
 
 </script>
 
