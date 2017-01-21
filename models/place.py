@@ -45,8 +45,11 @@ class Place(Thing, db.Model):
     faxNumber = db.Column('faxNumber', db.String(1024))
     branchCode = db.Column('branchCode', db.String(1024))
     
-    #geo_id = db.Column('geo_id', db.String(1024), db.ForeignKey('geocoords.guid'))
-    #geo = db.relationship('GeoCoords')
+    address_id = db.Column('address_id', db.String(1024), db.ForeignKey('postaladdress.guid'))
+    address = db.relationship('PostalAddress')
+    
+    geo_id = db.Column('geo_id', db.String(1024), db.ForeignKey('geocoords.guid'))
+    geo = db.relationship('GeoCoords')
         
     # geo_box
     
@@ -63,7 +66,7 @@ class Place(Thing, db.Model):
     discriminator = db.Column('type', db.String(100))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
-class LocalBusiness(Place, Organization):
+class LocalBusiness(Place):
     __mapper_args__ = {'polymorphic_identity': 'localbusiness'}
     id = db.Column(GUID(), db.ForeignKey('place.guid'), primary_key=True)
     

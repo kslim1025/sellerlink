@@ -6,6 +6,7 @@ import database, app
 
 from models import thing
 from models import place, organization
+from models import geo_coords
 from models import autodealer
 
 #import models.thing, models.offer#, models.request, models.comment
