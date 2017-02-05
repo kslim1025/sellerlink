@@ -28,26 +28,20 @@
 
 {% block content %}
 
-<div class="row">
+<div class="row"  ng-controller="searchResultsCtrl">
     <div class="col-lg-6">
-    
-    Location: <select id="location" onchange="panToLocation()">
-        <option value="">Select...</option>
-        <option selected data-latlng="27.914643031621768, -82.74971008300781" data-zoom="13">Clearwater, FL</option>
-        <option data-latlng="27.9539142,-82.4415314" data-zoom="12">Ybor City, FL</option>
-        <option data-latlng="26.1411125,-80.149973" data-zoom="12">Ft Lauderdale, FL</option>
-        <option data-latlng="25.782324,-80.2310801" data-zoom="12">Miami, FL</option>
-        <option data-latlng="44.076486948484536, -71.22058868408203" data-zoom="12">Bartlett, NH</option>
-        <option data-latlng="40.7056258,-73.97968" data-zoom="12">NYC</option>
-        <option data-latlng="40.7636971,-73.9975487" data-zoom="12">Pacho NYC</option>
-        <option data-latlng="39.1984815,-106.8367246" data-zoom="12">Aspen, CO</option>
-        <option data-latlng="50.104148,-123.001515" data-zoom="12">Whistler, BC</option>
-        <option data-latlng="30.0219504,-89.8830829" data-zoom="12">New Orleans, LA</option>
+
+    Block List: {{ data.features|length }}
+
+    Location: <select ng-options="item.label for item in locations" ng-model="formLocation" ng-change="panToLocation()">
     </select>
 
-    <input type=text id="queryInput" value="" />
-    <input type=button value="Search" onclick="doSearch()" />
+    <input type=text ng-model="formInput" id="queryInput" value="" />
+
+    <input type=button value="Search" ng-click="doSearch()" />
     
+    <input type=button value="Load" ng-click="doLoad()" />
+        
     <br><br>
     
     <div id="map_canvas"></div>
@@ -56,47 +50,50 @@
     <div class="col-lg-6">
         
         <div id="name"></div>
-        <div id="results" ng-controller="searchResultsCtrl">
-        RESULTS
+        <div id="results">
+        
+        {% raw %}
+        Pending: {{ countKeys(queue.pending) }} <a href="#" ng-click="show('pending')">Show</a> |
+        Loading: {{ countKeys(queue.loading) }} <a href="#" ng-click="show('loading')">Show</a> |
+        Blocked: {{ countKeys(queue.blocked) }} <a href="#" ng-click="show('blocked')">Show</a> |
+        Processed: {{ countKeys(queue.loaded) }} <a href="#" ng-click="show('loaded')">Show</a> 
+        {% endraw %}
+        <br>
+        
         <table width=100%>
         <thead>
         <colgroup>
             <col width=50% />
             <col width=15% />
-            <col width=20% />
-            <col width=15% />
+            <col width=35% />
         </colgroup>
         <tr>
             <th align=center>Name</th>
-            <th align=center>URL</th>
-            <th align=center>Address</th>
-            <th align=center>Phone</th>
+            <th align=center>Address/Phone</th>
         </tr>
         </thead>    
         <tbody>
             {% raw %}
             <tr ng-repeat="(id, row) in data">
-            <td>delete {{row.name}}</td>
+            <td>{{row.name}}</td>
             <td>{{row.website}}</td>
-            <td>{{row.formatted_address}}</td>
-            <td>{{row.formatted_phone_number}}</td>
+            <td>{{row.formatted_address}} <br> {{row.formatted_phone_number}} <br>
+            {{row.geometry.location.lat()}}, {{row.geometry.location.lng()}}
+            </td>
             </tr>
             {% endraw %}
         </tbody>
         </table>
 
-    {{ form }}
-    
-<a href="#" onclick="javascript:test()">test</a>
 
     </div>
 </div>
 
+<input type=button value="Save Markers" ng-click="saveMarkers()" /><br>
+
 </div> <!-- /row -->
 
-<span id="div"></span>
-<input type=button value="Save Markers" onclick="savemarkers()" /><br>
-<span id="info"></span>
+
 {% endblock %}
 
 
@@ -131,28 +128,6 @@ function savemarkers() {
 }
 
 
-function getDetails(id) {
-
-        if (id in data['places']) {
-        
-            return;    
-        }
-        
-         req = {placeId: id};
-         var service = new google.maps.places.PlacesService(map);
-
-         service.getDetails(req, function(place, stat) {
-                if (stat != google.maps.places.PlacesServiceStatus.OK) {
-                        console.log(stat);
-                        return false;
-                 }
-                data['places'][id] = place;
-                
-                addRow( place );
-          });
-
-}
-
 function addRow( row ) {
 
     scope = angular.element("#results").scope();
@@ -176,67 +151,6 @@ function save_data(cnt) {
         alert("Saved " + cnt + " places");
 }
 
-function doSearch() {
-        var query = $('#queryInput').val();
-
-        // 12 zoom level
-
-        var req = { bounds: map.getBounds(),
-                    keyword: query
-                  };
-        
-        var service = new google.maps.places.PlacesService(map);
-
-       service.radarSearch(req, function(results, status) {
-                console.log(results);
-
-                if (status != google.maps.places.PlacesServiceStatus.OK) {
-                    alert(status);
-                    return;
-                }
-
-                for (var i = 0, result; result = results[i]; i++) {
-
-                        lat = result.geometry.location.lat;
-                        lng = result.geometry.location.lng;
-
-                        key = lat + " " + lng;
-                        if (data['radar'][key] != undefined) continue;
-
-                        result.marker = new google.maps.Marker({
-                              map: map,
-                              position: result.geometry.location
-                        });
-
-                        callback = function(marker, row) {
-                                return function() {
-                                    getDetails( row.place_id );
-                                }
-                        }( result.marker, result );
-                                
-                        result.marker.addListener('click', callback);
-
-                        data['radar'][result.id] = {"ref":result.place_id, "lat":lat, "lng":lng};
-                 }
-                
-        });
-
-}
-
-// top 20 metro areas: XXX
-
-function panToLocation() {
-
-    var sel = $('#location option:selected');
-    
-    if (sel.length == 1) {
-        var lat = sel.data('latlng').split(',')[0];
-        var lng = sel.data('latlng').split(',')[1];
-        
-        map.setCenter({lat: parseFloat(lat), lng: parseFloat(lng)});
-    }
-    
-}
 
 function initialize() {
     
@@ -251,9 +165,193 @@ function initialize() {
         marker = new google.maps.Marker({map:map});
 }
 
-searchResultsCtrl = app.controller("searchResultsCtrl", function($scope) {
 
+searchResultsCtrl = app.controller("searchResultsCtrl", function($scope, $log, $window) {
+
+    $scope.activeMarkers = [];
+    
+    $scope.queue = {
+        'pending': {},
+        'loaded': {},
+        'loading': {},
+        'saved': {},
+        'blocked': {},
+        '_all': {},
+    };
+
+    $scope.countKeys = function(q) {
+        return Object.keys(q).length;    
+    };
+    
+    // Results loaded into table
     $scope.data = [];
+    $scope.formInput = "used car dealer";
+
+    // top 20 metro areas: XXX
+    $scope.locations = [
+        {'id': 1, 'pos':'27.914643031621768, -82.74971008300781', 'label':'Clearwater, FL', 'zoom': 12},
+        {'id': 1, 'pos':'27.9539142,-82.4415314', 'label':'Ybor City, FL', 'zoom': 12},
+        {'id': 1, 'pos':'26.1411125,-80.149973', 'label':'Ft Lauderdale, FL', 'zoom': 12},
+        {'id': 1, 'pos':'25.782324,-80.2310801', 'label':'Miami, FL', 'zoom': 12},
+        {'id': 1, 'pos':'44.076486948484536, -71.22058868408203', 'label':'Bartlett, NH', 'zoom': 12},
+        {'id': 1, 'pos':'40.7056258,-73.97968', 'label':'NYC', 'zoom': 12},
+        {'id': 1, 'pos':'40.7636971,-73.9975487', 'label':'Pacho NYC', 'zoom': 12},
+        {'id': 1, 'pos':'39.1984815,-106.8367246', 'label':'Aspen, CO', 'zoom': 12},
+        {'id': 1, 'pos':'50.104148,-123.001515', 'label':'Whistler, BC', 'zoom': 12},
+        {'id': 1, 'pos':'30.0219504,-89.8830829', 'label':'New Orleans, LA', 'zoom': 12},
+    ];
+    $scope.formLocation = $scope.locations[0];
+
+    $scope.show = function(q) {
+
+        while ($scope.activeMarkers.length) $scope.activeMarkers.pop().setMap(null);
+    
+        $scope.data = [];
+        data = $scope.queue[q];
+            
+        for (key in data) {
+            result = data[key];
+            
+            if (Object.keys(result).indexOf('marker') < 0)  {
+                result.marker = new google.maps.Marker({
+                    map: map, /* global var XXX */
+                    position: result.geometry.location
+                });
+            }
+            else result.marker.setMap( map );
+
+            $scope.activeMarkers.push( result.marker );
+
+            $scope.data.push( result );
+            
+            /* 
+                callback = function(marker, row) {
+                    return function() {
+                        getDetails( row.place_id );
+                    }
+                }( result.marker, result );
+                                
+                result.marker.addListener('click', callback);
+            */
+        }
+        
+    };
+
+    $scope.saveMarkers = function() {
+        w = $window.open();
+        tmp = {'blocked':{}, 'loaded': {}};
+        
+        for (x in $scope.queue['loaded']) {
+            p = $scope.queue['loaded'][x];
+            row = {};
+            row['name'] = p['name'];
+            row['geometry'] = p['geometry'];
+            //row['website'] = p['website'];
+            row['formatted_address'] = p['formatted_address'];
+            row['formatted_phone_number'] = p['formatted_phone_number'];
+            tmp['loaded'][x] = row;
+        }
+        
+        for (x in $scope.queue['blocked']) {
+            p = $scope.queue['blocked'][x];
+            row = {};
+            row['name'] = p['name'];
+            row['geometry'] = p['geometry'];
+            row['website'] = p['website'];
+            row['formatted_address'] = p['formatted_address'];
+            row['formatted_phone_number'] = p['formatted_phone_number'];
+            tmp['blocked'][x] = row;
+        }        
+        w.document.write( JSON.stringify(tmp) );
+    };
+
+    $scope.doLoad = function() {
+
+        max_per_click = 10;
+        cnt = 0;
+        keys = Object.keys($scope.queue['pending']);
+
+        var service = new google.maps.places.PlacesService(map);
+
+        var func = function(place, stat) {
+            //$log.log( place );
+            key = place.place_id;
+            
+            if (stat != google.maps.places.PlacesServiceStatus.OK) {
+                    $log.log( stat );
+                    return false;
+            }
+            delete $scope.queue['loading'][key];
+            
+            // block non-empty URLs, position in geojson, etc
+            if (place.website == undefined) {
+                $scope.queue['loaded'][key] = place;    
+            }
+            else $scope.queue['blocked'][key] = place;
+            
+        };
+    
+        while (cnt < max_per_click && keys.length > 0) {
+            key = keys.pop();
+
+            row = $scope.queue['pending'][key];
+            req = {placeId: row.place_id};
+            
+            callback = (function(k) { var key = k; return func; })(key);
+            
+            $scope.queue['loading'][key] = row;
+            delete $scope.queue['pending'][key];
+            
+            service.getDetails(req, callback);
+            
+            cnt++;
+        }
+        
+    };
+    
+    $scope.doSearch = function() {
+
+        // 12 zoom level
+
+        var req = { bounds: map.getBounds(),
+                    keyword: $scope.formInput
+                  };
+        
+        var service = new google.maps.places.PlacesService(map);
+
+        service.radarSearch(req, function(results, status) {
+                
+                if (status != google.maps.places.PlacesServiceStatus.OK) {
+                    $window.alert(status);
+                    return;
+                }
+
+                for (var i = 0, result; result = results[i]; i++) {
+
+                        lat = result.geometry.location.lat;
+                        lng = result.geometry.location.lng;
+
+                        key = result.place_id;
+                        if ($scope.queue['_all'][key] != undefined) continue;
+
+                        $scope.queue['_all'][key] = result;
+                        $scope.queue['pending'][key] = result;
+                 }
+                
+        });
+
+    };
+    
+    $scope.panToLocation = function() {
+
+        row = $scope.formLocation;
+
+        var lat = row.pos.split(',')[0];
+        var lng = row.pos.split(',')[1];
+        
+        map.setCenter({lat: parseFloat(lat), lng: parseFloat(lng)});
+
+    };
     
 });
 
@@ -267,7 +365,6 @@ function test() {
 $(document).ready(function() { 
     
     initialize(); 
-    
     
 });
 
