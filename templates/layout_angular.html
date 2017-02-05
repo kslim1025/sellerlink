@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html ng-app="sellerlink" ng-cloak>
+<html ng-app="sellerlink">
 
         <head>
         <title>{% block title %}SellerLink{% endblock %}</title> 
+        
+        
         {% block head %}
             {% include "header.html" %}
-        {% endblock %}
-        
-        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.css">        
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+          <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.css">        
+          <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 <style>
 .small-icon, .toolbar-menu {
@@ -38,10 +39,51 @@
   max-width: 283px;
   min-width: 230px;
 }
-
-
 </style>        
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-aria.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.3.2/ui-bootstrap.min.js"></script>
+
+{% endblock %}
+
+{% block angular_depends %}
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-sanitize/1.6.1/angular-sanitize.js"></script>
+<script src="/static/js/angular-openlayers-directive.js"></script>
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+
+<script>
+var angular_depends = ['ngMaterial', 'ui.bootstrap', 'openlayers-directive'];
+</script>
+{% endblock %}
+
+<script>
+var app = angular.module('sellerlink', angular_depends);
+
+toolbarCtrl = app.controller("toolbarCtrl", function($scope, $http, $mdSidenav) {
+
+  $scope.hideSearchBox = true;
+  
+  $scope.toggleSidenav = function(id) {
+    $mdSidenav(id).toggle();
+  }
+  
+  $scope.querySearch = function(query) {
+    data = [];
+    data.push({ value: '1', display: 'test'});
+    return data;  
+  }
+  
+});
+
+</script>        
+
         {% block extra_css %}{% endblock %}        
+        
+        {% block head_js %}{% endblock %}
         </head>
 
     <body>
@@ -176,36 +218,12 @@
     </md-content>
 
   </div>
-  
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-aria.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.3.2/ui-bootstrap.min.js"></script>
 
-<script>
-var app = angular.module('sellerlink', ['ngMaterial', 'ui.bootstrap']);
 
-toolbarCtrl = app.controller("toolbarCtrl", function($scope, $http, $mdSidenav) {
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
-  $scope.hideSearchBox = true;
-  
-  $scope.toggleSidenav = function(id) {
-    $mdSidenav(id).toggle();
-  }
-  
-  $scope.querySearch = function(query) {
-    data = [];
-    data.push({ value: '1', display: 'test'});
-    return data;  
-  }
-  
-});
+  {% block extra_js %}{% endblock %}
 
-</script>
-
-    {% block extra_js %}{% endblock %}
     
-    </body>
+  </body>
 </html>

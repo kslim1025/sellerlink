@@ -14,9 +14,17 @@ class PostalAddress(Thing, db.Model):
     # ContactPoint
     
 class GeoCoords(Thing, db.Model):
+    __table_args__ = (db.Index('uix_1', 'latitude', 'longitude', unique=True),)
+    
     latitude = db.Column('latitude', db.String(1024))
     longitude = db.Column('longitude', db.String(1024))
     elevation = db.Column('elevation', db.String(1024))
     addressCountry = db.Column('addressCountry', db.String(1024))
     postalCode = db.Column('postalCode', db.String(1024))
+    
+
+    def __init__(self, latitude, longitude):
         
+        self.latitude = latitude
+        self.longitude = longitude
+            

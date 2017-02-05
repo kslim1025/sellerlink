@@ -22,6 +22,9 @@ def index():
 
 @blueprint.route("/add")
 def add():
+    import json
+    d = json.load(open("export.geojson", "r+"))
+    
     model = AutoDealer()
     form = AutoDealerForm()
     if hasattr(request, 'POST'): 
@@ -34,7 +37,7 @@ def add():
             flash("AutoDealer added")
             return redirect(url_for("index"))
     
-    return render_template("radar_add.html", form=form)
+    return render_template("radar_add.html", form=form, data=d)
     
 """
 @blueprint.route("/<string:name>")

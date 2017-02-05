@@ -41,15 +41,15 @@ class PlaceImages(db.Model):
 
 class Place(Thing, db.Model):
 
-    telephone = db.Column('telephone', db.String(1024))
-    faxNumber = db.Column('faxNumber', db.String(1024))
-    branchCode = db.Column('branchCode', db.String(1024))
+    telephone = db.Column('telephone', db.String(1024), nullable=True)
+    faxNumber = db.Column('faxNumber', db.String(1024), nullable=True)
+    branchCode = db.Column('branchCode', db.String(1024), nullable=True)
     
-    address_id = db.Column('address_id', db.String(1024), db.ForeignKey('postaladdress.guid'))
-    address = db.relationship('PostalAddress')
+    #address_id = db.Column('address_id', db.String(1024), db.ForeignKey('postaladdress.guid'))
+    #address = db.relationship('PostalAddress')
     
-    geo_id = db.Column('geo_id', db.String(1024), db.ForeignKey('geocoords.guid'))
-    geo = db.relationship('GeoCoords')
+    geo_id = db.Column('geo_id', GUID(), db.ForeignKey('geocoords.guid'))
+    geo = db.relationship('GeoCoords', cascade="all,delete")
         
     # geo_box
     

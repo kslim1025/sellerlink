@@ -49,14 +49,14 @@ class Thing(object):
         return cls.__name__.lower()
         
     guid = db.Column('guid', GUID(), primary_key=True, default=uuid.uuid4)
-    description = db.Column('description', db.Text)
+    description = db.Column('description', db.Text, nullable=True)
     name = db.Column('name', db.String(1024))
-    alternateName = db.Column('alternateName', db.String(1024))
-    sameAs = db.Column('sameAs', db.String(1024)) 
-    url = db.Column('url', db.String(1024))
+    alternateName = db.Column('alternateName', db.String(1024), nullable=True)
+    sameAs = db.Column('sameAs', db.String(1024), nullable=True) 
+    url = db.Column('url', db.String(1024), nullable=True)
     
     date_created = db.Column('date_created', db.DateTime, default=func.now())
-    date_modified = db.Column('date_modified', db.DateTime, onupdate=func.utc_timestamp())
+    date_modified = db.Column('date_modified', db.DateTime, onupdate=func.utc_timestamp(), nullable=True)
 
     #location_id = db.Column('location_id', db.String(1024), db.ForeignKey('place.guid'))
     #location = db.relationship('Place')

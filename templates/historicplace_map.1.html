@@ -1,0 +1,136 @@
+{% extends "layout_angular.html" %}
+
+{% block extra_css %}
+<style type="text/css">
+   .labels {
+     color: red;
+     background-color: white;
+     font-family: "Lucida Grande", "Arial", sans-serif;
+     font-size: 10px;
+     font-weight: bold;
+     text-align: center;
+     width: 40px;
+     border: 2px solid black;
+     white-space: nowrap;
+   }
+
+.infoWindow {
+        border:0px none; opacity:1; background:transparent;
+        width:50px; color:red; text-align:center; opacity:1;
+            }
+            
+</style>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div ng-controller="LeafletMapCtrl">
+
+    <div layout="row">
+        
+        <div flex="70">
+             <openlayers ol-center="mapCenter" customLayers="true" ol-defaults="mapDefaults">
+                 <ol-layer ol-layer-properties="mapLayer"></ol-layer>
+                 <ol-marker lat="marker.lat" lon="marker.lon" ng-repeat="marker in markers"></ol-marker>
+             </openlayers>            
+        </div>
+        
+        <div flex="30">
+            
+            <div>
+            Draw your Route | Find Historic Places
+            </div>
+        
+        <br><br>
+    
+        <div id="name"></div>
+        <div id="results">
+        
+        <h3>Details</h3>
+        
+        <table width=100%>
+        <thead>
+        <colgroup>
+            <col width=50% />
+            <col width=15% />
+            <col width=35% />
+        </colgroup>
+        <tr>
+            <th align=center>Name</th>
+        </tr>
+        </thead>    
+        <tbody>
+            {% raw %}
+            <tr ng-repeat="(id, row) in data">
+            <td>{{row.name}}</td>
+            </tr>
+            {% endraw %}
+        </tbody>
+        </table>
+
+        </div>
+        
+    </div>
+</div>
+
+</div> <!-- /row -->
+
+
+{% endblock %}
+
+
+{% block head_js %}
+
+<script type="text/javascript">
+
+LeafletMapCtrl = app.controller("LeafletMapCtrl", [ '$scope', function($scope, $log, $window) {
+
+    // Results loaded into table
+    $scope.data = [];
+
+    $scope.mapCenter = {
+                    lat: 28.0690717287046,
+                    lon: -439.22165763264,
+                    zoom: 6,
+                    autodiscover: false
+    };
+    $scope.mapLayer = {
+            source: {
+                name: "MapBox",
+                type: 'MapBoxStudio',
+                mapId: 'streets-v9',
+                userId: 'mapbox',
+                accessToken: 'pk.eyJ1IjoiaWNtcHMiLCJhIjoiY2ltNXBlbHR1MDFuOHR6bTMyNmh3b3NvYiJ9.H5oQlbWbgxG3B2z9z-crhA',
+                }
+    };
+    $scope.mapDefaults = {
+        interactions: {
+            mouseWheelZoom: true
+        },
+        events: {
+            map: [ 'singleclick' ]
+        },
+        controls: {
+            zoom: true,
+            rotate: false,
+            attribution: false
+        }
+    };
+    $scope.projection = "EPSG:3857";
+    $scope.mapClickPos = {};
+    $scope.markers = [];
+    
+    $scope.$on('openlayers.map.singleclick', function(event, data) {
+        var p = ol.proj.transform( event.coordinate, "EPSG:3857", "EPSG:4326");//[ data.coord[0], data.coord[1] ], data.projection, $scope.projection );
+        
+        $scope.markers.push( {name: 'click', lat: p[1], lon: p[0] } );
+
+    });
+    
+}]);
+
+</script>
+
+{% endblock %}

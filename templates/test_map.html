@@ -1,0 +1,116 @@
+{% extends "layout_angular.html" %}
+
+{% block header %}{% endblock %}
+
+{% block head %}
+ 
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.css">        
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<style>
+.small-icon, .toolbar-menu {
+  width: 36px;
+  min-width: 36px;
+  padding-left: 0; padding-right: 0;
+  margin: 0;
+}  
+
+#xs-searchBox md-autocomplete-wrap {
+  box-shadow: none;
+}
+#xsSearchDiv {
+  border-bottom: 1px solid black;
+}
+
+.toolbar-search {
+  width: 36px;
+  min-width: 36px;
+} 
+
+.toolbar-logo img {
+  display: inline-block;
+  margin: auto;
+  padding-left: 10px;
+  padding-right: 10px;
+  max-width: 283px;
+  min-width: 230px;
+}
+
+
+</style>        
+                
+        
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-aria.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.3.2/ui-bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-sanitize/1.6.1/angular-sanitize.js"></script>
+
+<script src="/static/js/angular-openlayers-directive.js"></script>
+
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+
+<script>
+var app = angular.module('sellerlink', ['ngMaterial', 'ui.bootstrap', 'openlayers-directive']);
+
+toolbarCtrl = app.controller("toolbarCtrl", function($scope, $http, $mdSidenav) {
+
+  $scope.hideSearchBox = true;
+  
+  $scope.toggleSidenav = function(id) {
+    $mdSidenav(id).toggle();
+  }
+  
+  $scope.querySearch = function(query) {
+    data = [];
+    data.push({ value: '1', display: 'test'});
+    return data;  
+  }
+  
+});
+
+</script>        
+        
+{% endblock %}
+
+{% block content %}
+
+  <div ng-controller="DemoController">
+  
+    <div layout="row" flex="100">
+        <div flex="50">
+            <openlayers ol-center="center" height="200"></openlayers>            
+        </div>
+        
+        <div flex="50">
+            Draw your Route | Find Historic Places
+        </div>
+    </div>
+
+    <h1>Center autodiscover example</h1>
+    <form>
+        Latitude : <input type="number" step="any" ng-model="center.lat" />
+        Longitude : <input type="number" step="any" ng-model="center.lon" />
+        Zoom : <input type="number" step="any" ng-model="center.zoom" />
+        <button ng-click="center.autodiscover=true">Discover position</button>
+    </form>
+
+ </div>
+ 
+ 
+    <script>
+        app.controller('DemoController',  [ '$scope', function($scope, $log, $window) {
+            $scope.center = {
+                    lat: 28.0690717287046,
+                    lon: -439.22165763264,
+                    zoom: 6,
+                    autodiscover: false
+            };
+            
+       }]);
+    </script>
+
+{% endblock %}

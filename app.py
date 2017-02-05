@@ -5,7 +5,7 @@ from flask import request, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 #from controllers import food, restaurant, service
-from controllers import autodealer
+from controllers import autodealer, historicplace
 #from controllers import api
 
 # https://sqlalchemy-continuum.readthedocs.io/en/latest/
@@ -42,6 +42,12 @@ def create_app(config_filename):
     #app.register_blueprint(service.blueprint, url_prefix="/service")
     
     app.register_blueprint(autodealer.blueprint, url_prefix='/localbusiness/autodealer')
+    
+    app.register_blueprint(historicplace.blueprint, url_prefix='/historicplace')
+    
+    # sites/payment angular page :)
+    
+    # patreon/donation page
     
     # clubs, events :)
     # hotels, places ...
