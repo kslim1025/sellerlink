@@ -83,7 +83,7 @@ var angular_depends = ['ngMaterial', 'ui.bootstrap', 'ui-leaflet'];
         </thead>    
         <tbody>
             {% raw %}
-            <tr ng-repeat="(id, row) in data">
+            <tr ng-repeat="(id, row) in foundPlaces">
             <td>{{row.name}}</td>
             </tr>
             {% endraw %}
@@ -102,7 +102,7 @@ var angular_depends = ['ngMaterial', 'ui.bootstrap', 'ui-leaflet'];
 
 <script type="text/javascript">
 
-LeafletMapCtrl = app.controller("LeafletMapCtrl", [ '$scope', function($scope, $log, $window, $compile, leafletData) {
+LeafletMapCtrl = app.controller("LeafletMapCtrl", [ '$scope', '$http', '$log', function($scope, $http, $log, $window, $compile, leafletData) {
 
     // Results loaded into table
     $scope.data = [];
@@ -233,10 +233,26 @@ LeafletMapCtrl = app.controller("LeafletMapCtrl", [ '$scope', function($scope, $
         scope.addMarker( pos );
 
     });  
-    
+
+    $scope.foundPlaces = [];    
     $scope.findPlaces = function() {
         $scope.drawPolyline();
-        
+   
+	$http.post('{{ url_for('historicplace_user.nearby_json') }}', angular.toJson({ 'polygons': $scope.paths }) )
+	.then(function successCallback(data) {
+
+		$scope.foundPlaces = [];
+		for (x in data['data']) {
+			row = data['data'][x];
+			$scope.foundPlaces.push( row );
+	
+			// XXX group
+			key = "m" + $scope.markerIndex;
+		        $scope.markers[key] = { lat: parseFloat(row.pos.lat), lng: parseFloat(row.pos.lng), message: row.name };
+			$scope.markerIndex++;
+		}
+
+	});
     };
     
 }]);

@@ -6,9 +6,9 @@ from sqlalchemy.ext.declarative import declared_attr
 from models.thing import Thing
 
 class OrgAreas(db.Model):
-    guid = db.Column('guid', db.String(1024), primary_key=True)
-    org_id = db.Column('org_id', db.String(1024), ForeignKey('organization.guid'))
-    place_id = db.Column('place_id', db.String(1024), ForeignKey('place.guid'))
+    guid = db.Column('guid', db.String(1000), primary_key=True)
+    org_id = db.Column('org_id', db.String(1000), ForeignKey('organization.guid'))
+    place_id = db.Column('place_id', db.String(1000), ForeignKey('place.guid'))
    
 
 class Organization(Thing):
