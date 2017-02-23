@@ -56,7 +56,7 @@ class Thing(object):
     url = db.Column('url', db.String(1024), nullable=True)
     
     date_created = db.Column('date_created', db.DateTime, default=func.now())
-    date_modified = db.Column('date_modified', db.DateTime, onupdate=func.utc_timestamp(), nullable=True)
+    date_modified = db.Column('date_modified', db.DateTime, onupdate=func.now(), nullable=True)
 
     #location_id = db.Column('location_id', db.String(1024), db.ForeignKey('place.guid'))
     #location = db.relationship('Place')
