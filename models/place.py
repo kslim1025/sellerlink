@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from database import db
 
 from models.thing import Thing, GUID
-from models.geo_coords import GeoCoords
+from models.geo_coords import GeoCoords, PostalAddress
 from models.organization import Organization
 
 """
@@ -45,8 +45,8 @@ class Place(Thing, db.Model):
     faxNumber = db.Column('faxNumber', db.String(1024), nullable=True)
     branchCode = db.Column('branchCode', db.String(1024), nullable=True)
     
-    #address_id = db.Column('address_id', db.String(1024), db.ForeignKey('postaladdress.guid'))
-    #address = db.relationship('PostalAddress')
+    address_id = db.Column('address_id', GUID(), db.ForeignKey('postaladdress.guid'))
+    address = db.relationship('PostalAddress')
     
     geo_id = db.Column('geo_id', GUID(), db.ForeignKey('geocoords.guid'))
     geo = db.relationship('GeoCoords', cascade="all,delete")
@@ -70,7 +70,7 @@ class LocalBusiness(Place):
     __mapper_args__ = {'polymorphic_identity': 'localbusiness'}
     id = db.Column(GUID(), db.ForeignKey('place.guid'), primary_key=True)
     
-    currenciesAccepted = db.Column('currenciesAccepted', db.String(1024)) #	The currency accepted (in ISO 4217 currency format).
+    currenciesAccepted = db.Column('currenciesAccepted', db.String(1024), nullable=True) #	The currency accepted (in ISO 4217 currency format).
     # openingHours = db.Column('openingHours',  The general opening hours for a business. Opening hours can be specified as a weekly time range, starting with days, then times per day. Multiple days can be listed with commas ',' separating each day. Day or time ranges are specified using a hyphen '-'.
     """
     Days are specified using the following two-letter combinations: Mo, Tu, We, Th, Fr, Sa, Su.
@@ -81,5 +81,7 @@ class LocalBusiness(Place):
     
     paymentAccepted = db.String('paymentAccepted', db.String(1024))	 # Cash, credit card, etc.
     priceRange  = db.String('priceRange', db.String(1024))
-    
-    # organization = db.relationship()
+   
+    organization_id = db.Column('organization_id', GUID(), db.ForeignKey('organization.guid'))
+    organization = db.relationship('Organization')
+
