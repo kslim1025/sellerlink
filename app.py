@@ -5,7 +5,7 @@ from flask import request, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 #from controllers import food, restaurant, service
-from controllers import autodealer, historicplace
+from controllers import autodealer, historicplace, landmarks
 #from controllers import api
 
 # https://sqlalchemy-continuum.readthedocs.io/en/latest/
@@ -19,8 +19,11 @@ from database import db
 
 
 def index_view():
-    return render_template("index.html")
+	return render_template("index.html")
     
+def tour_view():
+	return render_template("tour.html")
+
     
 def create_app(config_filename):
 
@@ -29,7 +32,9 @@ def create_app(config_filename):
 
     # static pages
     app.add_url_rule("/", 'index', index_view)
-    
+   
+    app.add_url_rule("/tour", "tour", tour_view)
+ 
     #app.register_blueprint(pages.blueprint)
     #app.register_blueprint(admin.blueprint, url_prefix='/admin')
     
@@ -44,7 +49,9 @@ def create_app(config_filename):
     app.register_blueprint(autodealer.blueprint, url_prefix='/localbusiness/autodealer')
     
     app.register_blueprint(historicplace.blueprint, url_prefix='/historicplace')
-    
+  
+    app.register_blueprint(landmarks.blueprint, url_prefix='/landmarks') 
+ 
     # sites/payment angular page :)
     
     # patreon/donation page
