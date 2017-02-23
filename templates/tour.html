@@ -1,0 +1,293 @@
+{% extends "layout_angular.html" %}
+
+{% block extra_css %}
+<style type="text/css">
+   .labels {
+     color: red;
+     background-color: white;
+     font-family: "Lucida Grande", "Arial", sans-serif;
+     font-size: 10px;
+     font-weight: bold;
+     text-align: center;
+     width: 40px;
+     border: 2px solid black;
+     white-space: nowrap;
+   }
+
+.infoWindow {
+        border:0px none; opacity:1; background:transparent;
+        width:50px; color:red; text-align:center; opacity:1;
+            }
+            
+</style>
+{% endblock %}
+
+
+{% block angular_depends %}
+<script src="//unpkg.com/leaflet@0.7.7/dist/leaflet.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-simple-logger/0.1.7/angular-simple-logger.js"></script>
+
+<script src="/static/js/ui-leaflet.js"></script>
+<script src="/static/js/polyline.js"></script>
+
+<link rel="stylesheet" href="//unpkg.com/leaflet@0.7.7/dist/leaflet.css">
+
+<script>
+var angular_depends = ['ngMaterial', 'ui.bootstrap', 'ui-leaflet'];
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div id="mapCtrl" ng-controller="LeafletMapCtrl">
+
+    <div layout="row">
+        
+        <div flex="60">
+            <leaflet event-broadcast="mapEvents" paths="paths" markers="markers" lf-center="mapCenter" tiles="mapTiles" defaults="defaults" width="100%" height="400px"></leaflet>
+        </div>
+        
+        <div flex="40" style="height:400px;overflow-y:scroll;padding:5px">
+            
+            <div>
+            Draw a Route and Find Historic Places<br>
+            <a ng-click="markers = {}; paths = {}">Clear Markers</a> | <a ng-click="hideAdvanced = !hideAdvanced">Advanced</a>
+            
+            <div ng-hide="hideAdvanced == true">
+            Polyline: <input type=text ng-model="polyline"> <button class="btn" ng-click="updateMap()">Update</button>
+            </div>
+            
+            </div>
+        
+        <br>
+        
+        <!-- advanced, text input for polyline string XXX -->
+
+        <br>
+        
+        <button ng-click="findPlaces()" class="btn btn-primary">Find Historic Places</button>
+        
+        <h3>Historic Places</h3>
+        
+        <table width=100%>
+        <thead>
+        <colgroup>
+            <col width=50% />
+            <col width=15% />
+            <col width=35% />
+        </colgroup>
+        <tr>
+            <th align=center>Name</th>
+        </tr>
+        </thead>    
+        <tbody>
+            {% raw %}
+            <tr ng-repeat="(id, row) in foundPlaces">
+            <td>{{row.name}}</td>
+            </tr>
+            {% endraw %}
+        </tbody>
+        </table>
+
+        </div>
+        
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block head_js %}
+
+<script type="text/javascript">
+
+LeafletMapCtrl = app.controller("LeafletMapCtrl", [ '$scope', '$http', '$log', function($scope, $http, $log, $window, $compile, leafletData) {
+
+    // Results loaded into table
+    $scope.data = [];
+
+    $scope.mapCenter = {
+                    lat: 27.8141357,
+                    lng: -85.2250074,
+                    zoom: 6
+    };
+    $scope.mapTiles= {
+            url: '//api.mapbox.com/styles/v1/{user}/{mapId}/tiles/256/{z}/{x}/{y}?access_token={apiKey}',
+            type: 'xyz',
+            options: {
+                user: 'mapbox',
+                apiKey: 'pk.eyJ1IjoiaWNtcHMiLCJhIjoiY2ltNXBlbHR1MDFuOHR6bTMyNmh3b3NvYiJ9.H5oQlbWbgxG3B2z9z-crhA',
+                mapId: 'streets-v9'
+            }            
+    };
+    $scope.mapEvents = {
+        map: {
+            enable: ['click'],
+            logic: 'emit'
+        }    
+    };
+    $scope.markers = {};
+    $scope.markerIndex = 0;
+    $scope.paths = {};
+    
+    // tampa-orlando
+    $scope.polyline = "choiDbqovNsvCsfQ__H_iRaiB_iRml@_pUovCczRwrNsfQggCikSsmHikSiwKikSqjRonMuvK_mEsaJioFg_CwfFsjEe~E";
+    // test "mvngDr`fqNcjhLd|pC{ujBdawM";
+    
+    $scope.hideAdvanced = true;
+    
+    /* Update polylines */
+    $scope.updateMap = function() {
+        $scope.paths = {};
+        
+        m = polyline.decode( $scope.polyline );
+
+	$scope.paths['polyline'] = {
+                color: 'red',
+                weight: 3,
+                latlngs: m
+        };
+
+        
+    };
+    
+    $scope.addMarker = function(pos) {
+        key = "m" + $scope.markerIndex++;
+        popup = '<a href="#" onclick="deleteMarker(\''+key+'\')">Remove</a>';
+            
+        $scope.markers[key] = { lat: pos.lat, lng: pos.lng, draggable: true, message: popup };
+        
+        return key;
+    };
+    
+    $scope.drawPolyline = function() {
+        
+        // XXX draw this on button click?        
+        $scope.paths = {};
+        
+        locs = [];
+        lastmarker = false;
+        i = 0;
+        for (x in $scope.markers) {
+            locs.push( {lat:$scope.markers[x].lat, lng:$scope.markers[x].lng});
+            
+            // draw rectangle from each marker to the next to represent bounds of search
+            if (lastmarker != false) {
+                // XXX calculate dynamic difference based on slope...
+                slope_x = 0.05; // LNG
+                slope_y = 0.05; // LAT
+
+                // calculate latmin/max
+                if (lastmarker.lat < $scope.markers[x].lat) {
+                    latmin = lastmarker.lat - slope_y;
+                    latmax = $scope.markers[x].lat + slope_y;
+                }
+                else {
+                    latmin = $scope.markers[x].lat - slope_y;
+                    latmax = lastmarker.lat + slope_y;
+                }
+                
+                // calculate lngmin/max
+                if (lastmarker.lng < $scope.markers[x].lng) {
+                    lngmin = lastmarker.lng - slope_x;
+                    lngmax = $scope.markers[x].lng + slope_x;
+                }
+                else {
+                    lngmin = $scope.markers[x].lng - slope_x;
+                    lngmax = lastmarker.lng + slope_x;
+                }
+                
+                var sw = L.latLng( latmin, lngmin );
+                var ne = L.latLng( latmax, lngmax );
+
+                rect = L.latLngBounds( sw, ne );
+
+                $scope.paths['rect'+i] = {
+                  'color': 'blue',
+                  'weight': 5,
+                  'opacity': 0.5,
+                  'type': 'polygon',
+                  'latlngs': [ rect.getSouthWest(), rect.getSouthEast(), rect.getNorthEast(), rect.getNorthWest() ]
+                };
+                i++;  
+            }
+            lastmarker = $scope.markers[x];
+        }
+        $scope.paths['p1'] = {
+                color: 'blue',
+                weight: 3,
+                latlngs: locs 
+        };
+
+        locArr = [];
+        for (x in locs) locArr.push( [locs[x].lat, locs[x].lng ] );
+        $scope.polyline = polyline.encode( locArr );
+    };
+    
+    
+    $scope.$on('leafletDirectiveMap.click', function(event, data) {
+        var pos = data.leafletEvent.latlng;
+        
+        scope = angular.element($("#mapCtrl")).scope();
+        
+        scope.addMarker( pos );
+
+    });  
+
+    $scope.foundPlaces = [];    
+    $scope.findPlaces = function() {
+        $scope.drawPolyline();
+ 
+	$http.post('{{ url_for('landmarks_user.tour_json') }}', angular.toJson({ 'polygons': $scope.paths }) )
+	.then(function successCallback(data) {
+
+		$log.log( data );
+		link = "/trip/v1/driving/";
+
+		m = Object.keys($scope.markers).shift();
+		m = $scope.markers[m];
+		link += m.lng + "," + m.lat + ";";
+
+		$scope.foundPlaces = [];
+		for (x in data['data']['places']) {
+			row = data['data']['places'][x];
+			$scope.foundPlaces.push( row );
+	
+			// XXX group
+			key = "m" + $scope.markerIndex;
+		        $scope.markers[key] = { lat: parseFloat(row.pos.lat), lng: parseFloat(row.pos.lng), message: row.name };
+			$scope.markerIndex++;
+
+			link += row.pos.lng + "," + row.pos.lat + ";"; 
+		}
+
+		m = Object.keys( $scope.markers ).pop();
+$log.log(m);
+		link += $scope.markers[m].lng + "," + $scope.markers[m].lat + ";";
+
+		link += "?roundtrip=true&source=first&destination=last&steps=true&annotations=true";
+		$log.log( link );
+
+	});
+    };
+    
+}]);
+
+function deleteMarker(id) {
+        
+    scope = angular.element($("#mapCtrl")).scope();
+        
+    if (Object.keys(scope.markers).indexOf(id) == -1) return;
+    
+    scope.$apply(function() {
+        delete scope.markers[id];    
+        scope.paths = {};
+    });
+    
+}
+    
+
+</script>
+
+{% endblock %}
